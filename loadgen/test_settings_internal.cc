@@ -115,6 +115,9 @@ TestSettingsInternal::TestSettingsInternal(
       requested.scenario == TestScenario::MultiStreamFree) {
     samples_per_query = requested.multi_stream_samples_per_query;
   }
+  if (requested.scenario == TestScenario::SingleStream) {
+    samples_per_query = requested.multi_stream_samples_per_query;
+  }
 
   // In the offline scenario, coalesce all queries into a single query.
   if (requested.scenario == TestScenario::Offline) {
@@ -324,6 +327,10 @@ void TestSettingsInternal::LogSummary(AsyncSummary &summary) const {
 /// deadline, adding a test_settings.cc file has been deferred to v0.6.
 int TestSettings::FromConfig(const std::string &path, const std::string &model,
                              const std::string &scenario) {
+  std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" << std::endl;
+  std::cout << "path: " << path << std::endl;
+  std::cout << "model: " << model << std::endl;
+  std::cout << "scenario: " << scenario << std::endl;
   // TODO: move this method to a new file test_settings.cc
   std::map<std::string, std::string> kv;
 
@@ -467,10 +474,13 @@ int TestSettings::FromConfig(const std::string &path, const std::string &model,
            &multi_stream_target_latency_percentile, 0.01);
   lookupkv(model, "MultiStream", "target_qps", nullptr,
            &multi_stream_target_qps);
-  if (lookupkv(model, "MultiStream", "samples_per_query", &val, nullptr))
+  //if (lookupkv(model, "MultiStream", "samples_per_query", &val, nullptr))
+  //  multi_stream_samples_per_query = static_cast<int>(val);
+
+  if (lookupkv(model, scenario, "samples_per_query", &val, nullptr))
     multi_stream_samples_per_query = static_cast<int>(val);
-  if (lookupkv(model, "MultiStream", "max_async_queries", &val, nullptr))
-    multi_stream_max_async_queries = static_cast<int>(val);
+  else
+    multi_stream_samples_per_query = 1;
 
   // keys that apply to Server
   lookupkv(model, "Server", "target_latency_percentile", nullptr,
@@ -485,6 +495,8 @@ int TestSettings::FromConfig(const std::string &path, const std::string &model,
 
   // keys that apply to Offline
   lookupkv(model, "Offline", "target_qps", 0, &offline_expected_qps);
+
+  std::cout << "multi_stream_samples_per_query: " << multi_stream_samples_per_query << std::endl;
 
   return 0;
 }
